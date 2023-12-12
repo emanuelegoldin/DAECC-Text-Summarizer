@@ -195,6 +195,10 @@ Other services use a similar approach
 ## Our contribution
 
 ```mermaid
+---
+title: GCP
+---
+
 graph TB
     summarize --> split -- files --> parallelFor
     subgraph parallelFor
@@ -204,6 +208,25 @@ graph TB
 ```
 
 We need the whole file to create a reliable summary. Therefore, it makes sense to pass directly the summary to the split function.
+
+AWS SageMaker uses a pre-trained model to perform the operation. The input needs to be a string, therefore we probably would have to adapt the workflow differently:
+
+```mermaid
+---
+title: AWS & GCP
+---
+
+graph TB
+    split -- files --> parallelFor_1
+    subgraph parallelFor_1
+        extract
+    end
+    parallelFor_1 -- text --> mergeForSummary -- full extracted text --> summarize --> splitForFurtherProcessing --> parallelFor_2 
+    subgraph parallelFor_2
+        translate --> synthetize
+    end
+    parallelFor_2 -- audio files --> merge
+```
 
 We will have to extend the CORE library with the *SummarizeService*
 
