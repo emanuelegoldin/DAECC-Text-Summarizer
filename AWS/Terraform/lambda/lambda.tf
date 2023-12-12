@@ -8,7 +8,7 @@ provider "aws" {
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_dir  = "../lambda_function"            # replace with your zippped lambda function
+  source_dir  = "../lambda_function"
   output_path = "lambda.zip"
 }
 
