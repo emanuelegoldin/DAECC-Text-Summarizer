@@ -21,6 +21,17 @@ resource "aws_lambda_function" "lambda" {
   role          = data.aws_iam_role.existing.arn
   handler       = "lambda.lambda_handler"
   runtime       = "python3.9"
+  timeout = 900
 
   filename = data.archive_file.lambda_zip.output_path
+}
+
+output "lambda_arn" {
+  description = "The ARN of the Lambda function"
+  value       = aws_lambda_function.lambda.arn
+}
+
+output "lambda_function_name" {
+  description = "The name of the Lambda function"
+  value       = aws_lambda_function.lambda.function_name
 }
