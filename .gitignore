@@ -8,3 +8,7 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+
+# Ignore lambda zip files
+lambda.zip
+
