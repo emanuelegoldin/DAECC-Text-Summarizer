@@ -4,7 +4,7 @@ import os
 import io
 import boto3
 import json
-import csv
+from google.protobuf import documentai
 
 ENDPOINT_NAME = "summarizer-endpoint"
 runtime= boto3.client('runtime.sagemaker', region_name='us-east-1') # We deploy a single model to us-east-1
