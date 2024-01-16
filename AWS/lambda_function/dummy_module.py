@@ -1,2 +1,6 @@
-def dummy_function():
-    print("Hello from dummy_function!")
+class SummarizerService:
+    def __init__(self):
+        pass
+
+    def summarize(self, text):
+        return self.summarizer.summarize(text)
