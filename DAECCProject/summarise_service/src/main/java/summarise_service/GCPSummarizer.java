@@ -1,115 +1,73 @@
 package summarise_service;
+import com.google.cloud.documentai.v1beta3.DocumentProcessorServiceSettings;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.documentai.v1beta3.Document;
 import com.google.cloud.documentai.v1beta3.DocumentProcessorServiceClient;
 import com.google.cloud.documentai.v1beta3.ProcessRequest;
+import com.google.cloud.documentai.v1beta3.ProcessResponse;
 import com.google.cloud.documentai.v1beta3.RawDocument;
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
+import com.google.protobuf.ByteString;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 public class GCPSummarizer implements SummarizeService {
-    public SummarizerResponse summarize(String inputFile) {
 
-        try {
-            DocumentProcessorServiceClient  client = DocumentProcessorServiceClient.create();
+    public SummarizerResponse summarize(String filename) {
+        GCPConfig config = LoadConfig();
+        return processDocument(config.projectId, config.location, config.processorId,config.filePath);
+    }
 
-            // Load binary data
+    public SummarizerResponse processDocument(String projectId, String location, String processorId, String filePath) {
+        String endpoint = String.format("%s-documentai.googleapis.com:443", location);
+        DocumentProcessorServiceSettings settings;
+        try{
+            settings =
+            DocumentProcessorServiceSettings.newBuilder().setEndpoint(endpoint).build();
+        } catch (Exception e) {
+            // TODO: handle exception
+            return null;
+        }
+
+        try (DocumentProcessorServiceClient client = DocumentProcessorServiceClient.create(settings)) {
+            String processorName = String.format("projects/%s/locations/%s/processors/%s", projectId, location, processorId);
+
+            byte[] pdfContent = Files.readAllBytes(Paths.get(filePath));
+            ByteString content = ByteString.copyFrom(pdfContent);
+
             RawDocument rawDocument = RawDocument.newBuilder()
-                    //.setContent(com.google.protobuf.ByteString.copyFrom(pdfContent))
-                    .setMimeType("application/pdf")
-                    .build();
-
-            String processorName = String.format(
-                    "projects/%s/locations/us/processors/%s",
-                    "summarization-project-406313", "PROCESSOR_ID"
-            );
+                .setContent(content)
+                .setMimeType("application/pdf")
+                .build();
 
             ProcessRequest request = ProcessRequest.newBuilder()
-                    .setName(processorName)
-                    .setRawDocument(rawDocument)
-                    .build();
+                .setName(processorName)
+                .setRawDocument(rawDocument)
+                .build();
 
-            Document document = client.processDocument(request).getDocument();
+            ProcessResponse response = client.processDocument(request);
+            Document document = response.getDocument();
 
-            String dataText = document.getEntitiesList().toString();
-            int startIndex = dataText.indexOf("mention_text:") + "mention_text:".length();
-            int endIndex = dataText.indexOf("normalized_value", startIndex);
+            String summarizedText = document.getEntities(0).getNormalizedValue().getText();
+            System.out.println("summarized text: " + summarizedText);
+            SummarizerResponse summarizerResponse = new SummarizerResponse();
+            summarizerResponse.summary = summarizedText;  
+            return summarizerResponse;
+        } catch (Exception e) {
+            // TODO: handle exception
+            return null;
+        }
+    }
 
-            String extractedText = dataText.substring(startIndex, endIndex).trim().replace("•", "");
-
-            System.out.println("Extracted text: " + extractedText);
-        }catch (Exception e){}
-        return null;
+    private GCPConfig LoadConfig() {
+        ObjectMapper mapper = new ObjectMapper();
+        GCPConfig config = null;
+        try {
+            config = mapper.readValue(this.getClass().getResourceAsStream("config.json"), GCPConfig.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return config;
     }
 }
-
-
-
-//public class DocumentProcessor {
-//
-//    private static final String OUTPUT_BUCKET_NAME = System.getenv("OUTPUT_BUCKET_NAME");
-//    private static final String PROCESSOR_ID = System.getenv("PROCESSOR_ID");
-//
-//    public static void main(String[] args) {
-//        String bucketName = args[0];
-//        String fileName = args[1];
-//
-//        System.out.println(PROCESSOR_ID + OUTPUT_BUCKET_NAME);
-//        System.out.printf("Processing document: %s in bucket %s%n", fileName, bucketName);
-//
-//        Storage storage = StorageOptions.getDefaultInstance().getService();
-//        String summarizedText = processArrivalFile(storage, bucketName, fileName);
-//        saveDocumentToBucket(storage, fileName, summarizedText);
-//    }
-//
-//    private static String processArrivalFile(Storage storage, String bucketName, String fileName) {
-//        Blob blob = storage.get(bucketName, fileName);
-//
-//        // Download the file content from Cloud Storage
-//        byte[] pdfContent = blob.getContent();
-//
-//        // Create a Document AI client
-//        DocumentProcessorServiceClient client = DocumentProcessorServiceClient.create() {
-//            // Load binary data
-//            RawDocument rawDocument = RawDocument.newBuilder()
-//                    .setContent(com.google.protobuf.ByteString.copyFrom(pdfContent))
-//                    .setMimeType("application/pdf")
-//                    .build();
-//
-//            String processorName = String.format(
-//                    "projects/%s/locations/us/processors/%s",
-//                    "summarization-project-406313", PROCESSOR_ID
-//            );
-//
-//            ProcessRequest request = ProcessRequest.newBuilder()
-//                    .setName(processorName)
-//                    .setRawDocument(rawDocument)
-//                    .build();
-//
-//            Document document = client.processDocument(request).getDocument();
-//
-//            String dataText = document.getEntitiesList().toString();
-//            int startIndex = dataText.indexOf("mention_text:") + "mention_text:".length();
-//            int endIndex = dataText.indexOf("normalized_value", startIndex);
-//
-//            String extractedText = dataText.substring(startIndex, endIndex).trim().replace("•", "");
-//
-//            System.out.println("Extracted text: " + extractedText);
-//
-//            return extractedText;
-//
-//        }
-//
-//        private void saveDocumentToBucket (Storage storage, String fileName, String text){
-//            String summarizedFileName = fileName.substring(0, fileName.length() - 4) + "_summarized.txt";
-//
-//            Blob blob = storage.get(OUTPUT_BUCKET_NAME, summarizedFileName);
-//
-//            // Upload the extracted text as a string to a file in the bucket
-//            blob.uploadFromByteArray(text.getBytes(), 0, text.length());
-//
-//            System.out.printf("Extracted text uploaded to %s/%s%n", OUTPUT_BUCKET_NAME, summarizedFileName);
-//        }
-//    }
-//}
