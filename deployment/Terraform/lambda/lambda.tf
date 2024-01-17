@@ -1,3 +1,4 @@
+# TODO: update function location and use java 11
 variable "region" {}
 variable "function_name" {}
 

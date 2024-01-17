@@ -26,6 +26,22 @@
             <artifactId>aws-java-sdk-sagemaker</artifactId>
             <version>1.12.637</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-sagemakerruntime -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sagemakerruntime</artifactId>
+            <version>1.12.638</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-document-ai</artifactId>
+            <version>2.37.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+            <version>2.31.0</version>
+        </dependency>
     </dependencies>
 
 </project>
