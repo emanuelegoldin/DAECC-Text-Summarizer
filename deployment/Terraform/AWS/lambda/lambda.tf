@@ -5,7 +5,7 @@ variable "function_name" {}
 
 provider "aws" {
   region = var.region
-  shared_credentials_files = ["~/.aws/credentials"]
+  shared_credentials_files = ["${path.root}/AWS/aws_credentials"]
 }
 
 data "aws_iam_role" "existing" {

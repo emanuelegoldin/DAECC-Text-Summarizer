@@ -42,8 +42,13 @@ module "api_gateway_us_west_2" {
 #                                               GCP                                                      #
 ##########################################################################################################
 
+locals {
+  credentials = jsondecode(file("./gcp_key.json"))
+}
+
 provider "google" {
-  project = "summarization-project-406313"
+  credentials = file("./gcp_key.json")
+  project     = local.credentials.project_id
   region  = "us-central1"
 }
 
@@ -81,6 +86,7 @@ resource "google_storage_bucket" "processed_documents_bucket" {
 
 # DocumentAI processor setup
 resource "google_document_ai_processor" "summarizer_processor" {
+  //project = local.credentials.project_id
   display_name = "summarizer-processor"
   type         = "SUMMARY_PROCESSOR"
   location     = "us"
@@ -95,6 +101,8 @@ module "bucket-triggered-function" {
   bucket-to-subscribe = google_storage_bucket.documents_bucket.name
   output-bucket-name = google_storage_bucket.processed_documents_bucket.name
   summarizer-processor-id = google_document_ai_processor.summarizer_processor.id
+  project_id = local.credentials.project_id
+  service_account_email = local.credentials.client_email
 }
 
 ##########################################################################################################
