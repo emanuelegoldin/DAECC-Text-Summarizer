@@ -1,5 +1,6 @@
 package summarise_service;
 
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
@@ -16,18 +17,21 @@ public class AWSSummarizer implements SummarizeService {
         this.sagemakerRuntime = AmazonSageMakerRuntimeClientBuilder.defaultClient();
     }
 
+    public AWSSummarizer(Object testing) {
+    }
+
     public SummarizerResponse summarize(String inputFile) {
 
         // Read endpoint
-        ObjectMapper objectMapper = new ObjectMapper();
-        AWSConfig config = null;
-        try{
-            config = objectMapper.readValue(this.getClass().getResourceAsStream("config.json"), AWSConfig.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        AWSConfig config = readConfig();
+
+        System.out.println("Endpoint: " + config.EndpointName);
+        System.out.println("Text: " + config.Text);
+        System.out.println("Input file: " + inputFile);
+        
         InvokeEndpointRequest invokeEndpointRequest = new InvokeEndpointRequest()
             .withEndpointName(config.EndpointName)
+            .withContentType("application/x-text")
             .withBody(ByteBuffer.wrap(inputFile.getBytes()));
 
         InvokeEndpointResult result = sagemakerRuntime.invokeEndpoint(invokeEndpointRequest);
@@ -41,5 +45,17 @@ public class AWSSummarizer implements SummarizeService {
         SummarizerResponse summarizerResponse = new SummarizerResponse();
         summarizerResponse.summary = responseString;
         return summarizerResponse;
+    }
+
+    public AWSConfig readConfig() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        AWSConfig config = new AWSConfig();
+        try{
+            InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.json");
+            config = objectMapper.readValue(inputStream, AWSConfig.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return config;
     }
 }

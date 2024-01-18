@@ -17,7 +17,11 @@ public class summarise implements RequestHandler<SummariseInput, SummariseOutput
     private static final Gson gson = new Gson();
 
     public SummariseOutput handleRequest(SummariseInput summariseInput, Context context) {
-        return null;
+        try {
+            return exec(summariseInput);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void service(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
