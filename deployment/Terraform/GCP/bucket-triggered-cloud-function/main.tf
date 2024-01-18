@@ -27,21 +27,12 @@ variable "summarizer-processor-id" {
   description = "id of the processor to e called"
 }
 
-
-# --- zip python folder with code and requirements
-
-data "archive_file" "default" {
-  type        = "zip"
-  output_path = "${path.module}/${var.function_name}.zip"
-  source_dir  = "${path.module}/${var.function_name}/python"
-}
-
 # --- create google bucket storage object with zip file and store it into the bucket
 
 resource "google_storage_bucket_object" "object" {
   name   = "${var.function_name}.zip"
   bucket = var.google_storage_bucket_name
-  source = data.archive_file.default.output_path
+  source = "${path.root}/../../DAECCProject/summarise/target/deployable/summarise-1.0-SNAPSHOT.jar"
 }
 
 
@@ -51,7 +42,7 @@ resource "google_cloudfunctions2_function" "default" {
   description = "gcp_function"
 
   build_config {
-    runtime     = "python310"
+    runtime     = "java11"
     entry_point = var.function-handler
     source {
       storage_source {
@@ -134,7 +125,6 @@ resource "google_project_iam_member" "artifactregistry_reader" {
   member     = "serviceAccount:370392824615-compute@developer.gserviceaccount.com"
   depends_on = [google_project_iam_member.event_receiving]
 }
-
 
 output "function_uri" {
   value = google_cloudfunctions2_function.default.service_config[0].uri
