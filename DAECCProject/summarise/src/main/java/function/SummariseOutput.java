@@ -10,4 +10,12 @@ public class SummariseOutput {
         this.summary = summary;
         return this;
     }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary= summary;
+    }
 }
