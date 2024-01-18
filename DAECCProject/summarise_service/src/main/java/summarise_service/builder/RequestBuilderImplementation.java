@@ -3,15 +3,15 @@ package summarise_service.builder;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
-public class RequestBuilderImplementation<Request> extends RequestBuilder<Request> {
+public class RequestBuilderImplementation<RequestType> extends Builder<RequestType> {
 
-    private Request request;
+    private RequestType request;
 
-    public RequestBuilderImplementation(Request request) {
+    public RequestBuilderImplementation(RequestType request) {
         this.request = request;
     }
 
-    public RequestBuilderImplementation(Class<Request> requestClass) {
+    public RequestBuilderImplementation(Class<RequestType> requestClass) {
         try {
             this.request = requestClass.getConstructor().newInstance();
         }  catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
@@ -20,12 +20,12 @@ public class RequestBuilderImplementation<Request> extends RequestBuilder<Reques
     }
 
     @Override
-    public Request build() {
+    public RequestType build() {
         return request;
     }
 
     @Override
-    protected <Value> RequestBuilder<Request> setField(String fieldName, Value value) {
+    protected <Value> Builder<RequestType> setField(String fieldName, Value value) {
         try {
             Field field = request.getClass().getField(fieldName);
             field.setAccessible(true);
