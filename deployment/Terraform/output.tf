@@ -1,3 +1,7 @@
+##############################################################################################
+#                                       AWS Outputs                                          #
+##############################################################################################
+
 output "lambda_arn_us_west_2" {
   description = "The ARN of the Lambda function"
   value       = module.lambda_us_west_2.lambda_arn
@@ -16,4 +20,16 @@ output "api_gateway_url_us_west_2" {
 output "api_gateway_url_us_east_1" {
   description = "The URL of the API Gateway"
   value       = module.api_gateway_us_east_1.api_gateway_url
+}
+
+##############################################################################################
+#                                       GCP Outputs                                          #
+##############################################################################################
+
+output "function_uri" {
+  value = module.bucket-triggered-function.function_uri
+}
+
+output "bucket_url" {
+  value = google_storage_bucket.documents_bucket.url
 }
