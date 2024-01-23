@@ -19,7 +19,12 @@ public class GCPSummarizer implements SummarizeService {
         return processDocument(config.projectId, config.location, config.processorId,config.filePath);
     }
 
-    public SummarizerResponse processDocument(String projectId, String location, String processorId, String filePath) {
+    public SummarizerResponse processDocument(String filePath) {
+        GCPConfig config = LoadConfig();
+        String projectId = config.projectId;
+        String location = config.location;
+        String processorId = config.processorId;
+
         String endpoint = String.format("%s-documentai.googleapis.com:443", location);
         DocumentProcessorServiceSettings settings;
         try{
@@ -33,9 +38,7 @@ public class GCPSummarizer implements SummarizeService {
         try (DocumentProcessorServiceClient client = DocumentProcessorServiceClient.create(settings)) {
             String processorName = String.format("projects/%s/locations/%s/processors/%s", projectId, location, processorId);
 
-            byte[] pdfContent = Files.readAllBytes(Paths.get(filePath));
-            ByteString content = ByteString.copyFrom(pdfContent);
-
+            ByteString content = fetchFileFromStorage(filePath)
             RawDocument rawDocument = RawDocument.newBuilder()
                 .setContent(content)
                 .setMimeType("application/pdf")
@@ -70,4 +73,14 @@ public class GCPSummarizer implements SummarizeService {
         }
         return config;
     }
+
+    private  ByteString fetchFileFromStorage(String fileLocation) throws URISyntaxException {
+        URI uri = new URI(fileLocation);
+        String bucketName = uri.getHost();
+        String fileName = uri.getPath().substring(1);
+        Storage storage = StorageOptions.getDefaultInstance().getService();
+        Blob blob = storage.get(bucketName, fileName);
+        return ByteString.copyFrom(blob.getContent());
+    }
+
 }

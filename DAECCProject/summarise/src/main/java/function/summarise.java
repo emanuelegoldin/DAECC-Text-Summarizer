@@ -25,10 +25,23 @@ public class summarise implements RequestHandler<SummariseInput, SummariseOutput
     }
 
     public void service(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
-        JsonObject body = gson.fromJson(httpRequest.getReader(), JsonObject.class);
-        SummariseInput input = gson.fromJson(body.toString(), SummariseInput.class);
-        SummariseOutput output = exec(input);
-        httpResponse.getWriter().write(gson.toJson(output));
+        String fileLocation = request.getFirstQueryParameter("location").orElse(null);
+        System.out.println(fileLocation);
+
+        if (fileLocation == null || fileLocation.isEmpty()) {
+            response.setStatusCode(400);
+            response.getWriter().write("Missing 'location' parameter");
+            return;
+        }
+        try {
+            //todo: pass config here , or load it inside
+            String resumedText =  processDocument(fileLocation);
+            response.getWriter().write(resumedText);
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.getWriter().write("Error executing function: " + e.getMessage());
+        }
+
     }
 
     private SummariseOutput exec(SummariseInput input) {
