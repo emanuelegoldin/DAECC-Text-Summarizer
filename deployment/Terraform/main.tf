@@ -94,7 +94,6 @@ module "java-function" {
   function_name = "java-summarizer"
   google_storage_bucket_name = google_storage_bucket.function_bucket.name
   region = "us-central1"
-  processor_id = google_document_ai_processor.summarizer_processor.id
 }
 
 
