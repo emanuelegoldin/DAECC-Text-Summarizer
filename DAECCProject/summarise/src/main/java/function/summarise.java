@@ -24,7 +24,7 @@ public class summarise implements RequestHandler<SummariseInput, SummariseOutput
         }
     }
 
-    public void service(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
+    public void service(HttpRequest request, HttpResponse response) throws Exception {
         String fileLocation = request.getFirstQueryParameter("location").orElse(null);
         System.out.println(fileLocation);
 
@@ -35,8 +35,8 @@ public class summarise implements RequestHandler<SummariseInput, SummariseOutput
         }
         try {
             //todo: pass config here , or load it inside
-            String resumedText =  processDocument(fileLocation);
-            response.getWriter().write(resumedText);
+            //SummariseOutput output =  exec();
+            response.getWriter().write("");
         } catch (Exception e) {
             response.setStatusCode(500);
             response.getWriter().write("Error executing function: " + e.getMessage());
