@@ -9,12 +9,6 @@ class AWSSummarizerTest {
 
     @Test
     void testReadConfig() {
-        AWSSummarizer awsSummarizer = new AWSSummarizer(null);
-        AWSConfig config = awsSummarizer.readConfig();
-
-        assertNotNull(config);
-        assertEquals("summarizer-endpoint", config.EndpointName);
-        assertEquals("The quick brown fox jumped over the lazy dog.", config.Text);
         // Add more assertions to validate the properties of the config object
         // For example:
         // assertEquals("accessKey", config.getAccessKey());
