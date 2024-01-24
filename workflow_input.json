@@ -1,0 +1,13 @@
+{
+    "inputFile": "sample.pdf",
+    "sourceLanguage": "en_US",
+  
+    "inputBucket": "",
+    "splitBucket": "",
+    "summariseBucket1": "",
+    "summariseBucket2": "",
+    "outputBucket": "",
+  
+    "summariseProvider1": "AWS",
+    "summariseProvider2": "GCP"
+  }
