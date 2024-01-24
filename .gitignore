@@ -1,8 +1,9 @@
 **/.vscode
 **/terraform.tfstate*
 **/terraform.tfstate.backup
-/deployment/Terraform/AWS/aws_credentials
-/deployment/Terraform/gcp_key.json
+**/.terraform
+/deployment/aws_deployment/modules/aws_credentials
+/deployment/gcp_deployment/gcp_key.json
 
 target/
 !.mvn/wrapper/maven-wrapper.jar

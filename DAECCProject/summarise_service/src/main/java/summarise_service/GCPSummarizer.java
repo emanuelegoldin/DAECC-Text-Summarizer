@@ -1,31 +1,26 @@
 package summarise_service;
 import com.google.cloud.documentai.v1beta3.DocumentProcessorServiceSettings;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.documentai.v1beta3.Document;
 import com.google.cloud.documentai.v1beta3.DocumentProcessorServiceClient;
 import com.google.cloud.documentai.v1beta3.ProcessRequest;
 import com.google.cloud.documentai.v1beta3.ProcessResponse;
 import com.google.cloud.documentai.v1beta3.RawDocument;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.StorageOptions;
 import com.google.protobuf.ByteString;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class GCPSummarizer implements SummarizeService {
 
     public SummarizerResponse summarize(String filename) {
-        GCPConfig config = LoadConfig();
-        return processDocument(config.projectId, config.location, config.processorId,config.filePath);
+        return processDocument(filename);
     }
 
     public SummarizerResponse processDocument(String filePath) {
-        GCPConfig config = LoadConfig();
-        String projectId = config.projectId;
-        String location = config.location;
-        String processorId = config.processorId;
-
-        String endpoint = String.format("%s-documentai.googleapis.com:443", location);
+        String endpoint = String.format("%s-documentai.googleapis.com:443", "us");
         DocumentProcessorServiceSettings settings;
         try{
             settings =
@@ -36,9 +31,9 @@ public class GCPSummarizer implements SummarizeService {
         }
 
         try (DocumentProcessorServiceClient client = DocumentProcessorServiceClient.create(settings)) {
-            String processorName = String.format("projects/%s/locations/%s/processors/%s", projectId, location, processorId);
+            String processorName = System.getenv("PROCESSOR_NAME");
 
-            ByteString content = fetchFileFromStorage(filePath)
+            ByteString content = fetchFileFromStorage(filePath);
             RawDocument rawDocument = RawDocument.newBuilder()
                 .setContent(content)
                 .setMimeType("application/pdf")
@@ -61,17 +56,6 @@ public class GCPSummarizer implements SummarizeService {
             // TODO: handle exception
             return null;
         }
-    }
-
-    private GCPConfig LoadConfig() {
-        ObjectMapper mapper = new ObjectMapper();
-        GCPConfig config = null;
-        try {
-            config = mapper.readValue(this.getClass().getResourceAsStream("config.json"), GCPConfig.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return config;
     }
 
     private  ByteString fetchFileFromStorage(String fileLocation) throws URISyntaxException {
