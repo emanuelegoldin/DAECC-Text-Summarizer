@@ -1,0 +1,70 @@
+package summarise_service;
+import com.google.cloud.documentai.v1beta3.DocumentProcessorServiceSettings;
+import com.google.cloud.documentai.v1beta3.Document;
+import com.google.cloud.documentai.v1beta3.DocumentProcessorServiceClient;
+import com.google.cloud.documentai.v1beta3.ProcessRequest;
+import com.google.cloud.documentai.v1beta3.ProcessResponse;
+import com.google.cloud.documentai.v1beta3.RawDocument;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.StorageOptions;
+import com.google.protobuf.ByteString;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+
+public class GCPSummarizer implements SummarizeService {
+
+    public SummarizerResponse summarize(String filename) {
+        return processDocument(filename);
+    }
+
+    public SummarizerResponse processDocument(String filePath) {
+        String endpoint = String.format("%s-documentai.googleapis.com:443", "us");
+        DocumentProcessorServiceSettings settings;
+        try{
+            settings =
+            DocumentProcessorServiceSettings.newBuilder().setEndpoint(endpoint).build();
+        } catch (Exception e) {
+            // TODO: handle exception
+            return null;
+        }
+
+        try (DocumentProcessorServiceClient client = DocumentProcessorServiceClient.create(settings)) {
+            String processorName = System.getenv("PROCESSOR_NAME");
+
+            ByteString content = fetchFileFromStorage(filePath);
+            RawDocument rawDocument = RawDocument.newBuilder()
+                .setContent(content)
+                .setMimeType("application/pdf")
+                .build();
+
+            ProcessRequest request = ProcessRequest.newBuilder()
+                .setName(processorName)
+                .setRawDocument(rawDocument)
+                .build();
+
+            ProcessResponse response = client.processDocument(request);
+            Document document = response.getDocument();
+
+            String summarizedText = document.getEntities(0).getNormalizedValue().getText();
+            System.out.println("summarized text: " + summarizedText);
+            SummarizerResponse summarizerResponse = new SummarizerResponse();
+            summarizerResponse.summary = summarizedText;  
+            return summarizerResponse;
+        } catch (Exception e) {
+            // TODO: handle exception
+            return null;
+        }
+    }
+
+    private  ByteString fetchFileFromStorage(String fileLocation) throws URISyntaxException {
+        URI uri = new URI(fileLocation);
+        String bucketName = uri.getHost();
+        String fileName = uri.getPath().substring(1);
+        Storage storage = StorageOptions.getDefaultInstance().getService();
+        Blob blob = storage.get(bucketName, fileName);
+        return ByteString.copyFrom(blob.getContent());
+    }
+
+}

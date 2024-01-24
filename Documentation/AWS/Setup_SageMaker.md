@@ -14,6 +14,9 @@ On the sidebar of SageMaker, select Notebook --> Notebook instances and create a
 Once the instance is created (it might require up to 10 minutes), start the jupyter notebook.
 
 From the notebook, browse existing project and select the text summarization one.
+![Text summarization](../Images/jumpstart_notebook_selection.png)
+
+[This](https://github.com/aws/amazon-sagemaker-examples/blob/main/introduction_to_amazon_algorithms/jumpstart_text_summarization/Amazon_JumpStart_Text_Summarization.ipynb) is the project we used for our project.
 
 ### Step 2: deploy model and endpoint
 
