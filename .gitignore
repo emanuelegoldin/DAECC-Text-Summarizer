@@ -2,7 +2,7 @@
 **/terraform.tfstate*
 **/terraform.tfstate.backup
 **/.terraform*
-**/.zip
+**/*.zip
 /deployment/aws_deployment/modules/aws_credentials
 /deployment/gcp_deployment/gcp_key.json
 
