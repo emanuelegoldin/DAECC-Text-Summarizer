@@ -2,6 +2,8 @@ package function;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
@@ -13,14 +15,21 @@ import summarise_service.SummarizeService;
 import summarise_service.SummarizerFactory;
 import summarise_service.SummarizerResponse;
 
-public class summarise implements RequestHandler<SummariseInput, SummariseOutput>, HttpFunction {
+public class summarise implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>, HttpFunction {
     private static final Gson gson = new Gson();
 
-    public SummariseOutput handleRequest(SummariseInput summariseInput, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent event, Context context) {
         try {
-            return exec(summariseInput);
+            SummariseInput summariseInput = gson.fromJson(event.getBody(), SummariseInput.class);
+            SummariseOutput output = exec(summariseInput);
+
+            APIGatewayProxyResponseEvent responseEvent = new APIGatewayProxyResponseEvent();
+            responseEvent.setStatusCode(200);
+            responseEvent.setBody(gson.toJson(output));
+            return responseEvent;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            // Handle exception
+            return null;
         }
     }
 
@@ -49,6 +58,7 @@ public class summarise implements RequestHandler<SummariseInput, SummariseOutput
     }
 
     private SummariseOutput exec(SummariseInput input) {
+        System.out.println("Input: " + input.inputFile + " " + input.provider);
         Provider provider = StringToProvider(input.provider);
         SummarizeService service = SummarizerFactory.Create(provider);
         SummarizerResponse summary = service.summarize(input.inputFile);
