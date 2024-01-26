@@ -1,38 +1,43 @@
 package function;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import summarise_service.FileType;
 import summarise_service.Provider;
 import summarise_service.SummarizeService;
 import summarise_service.SummarizerFactory;
 import summarise_service.SummarizerResponse;
 
-public class summarise implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>, HttpFunction {
+import shared.Credentials;
+import storage.Storage;
+import storage.StorageImpl;
+
+public class summarise implements RequestHandler<SummariseInput, SummariseOutput>, HttpFunction {
     private static final Gson gson = new Gson();
 
-    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent event, Context context) {
+    @Override
+    public SummariseOutput handleRequest(SummariseInput event, Context context) {
         try {
-            SummariseInput summariseInput = gson.fromJson(event.getBody(), SummariseInput.class);
-            SummariseOutput output = exec(summariseInput);
-
-            APIGatewayProxyResponseEvent responseEvent = new APIGatewayProxyResponseEvent();
-            responseEvent.setStatusCode(200);
-            responseEvent.setBody(gson.toJson(output));
-            return responseEvent;
+            return exec(event);
         } catch (Exception e) {
-            // Handle exception
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
+    @Override
     public void service(HttpRequest request, HttpResponse response) throws Exception {
         // Parse request body into SummariseInput object
         JsonObject body = gson.fromJson(request.getReader(), JsonObject.class);
@@ -49,7 +54,7 @@ public class summarise implements RequestHandler<APIGatewayProxyRequestEvent, AP
         try {
             //todo: pass config here , or load it inside
             SummariseOutput output = exec(input);
-            response.getWriter().write(output.getSummary());
+            response.getWriter().write(gson.toJson(output));
         } catch (Exception e) {
             response.setStatusCode(500);
             response.getWriter().write("Error executing function: " + e.getMessage());
@@ -57,12 +62,61 @@ public class summarise implements RequestHandler<APIGatewayProxyRequestEvent, AP
 
     }
 
-    private SummariseOutput exec(SummariseInput input) {
-        System.out.println("Input: " + input.inputFile + " " + input.provider);
+    private SummariseOutput exec(SummariseInput input) throws Exception {
+
+        Credentials credentials;
+        try {
+            credentials = Credentials.loadDefaultCredentials();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load credentials: " + e.getMessage());
+        }
+
+        Storage storage = new StorageImpl(credentials);
+        try {
+            storage.read(input.getInputBucket() + input.getInputFile());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read file "+ input.getInputFile() +" from bucket "+ input.getInputBucket() +": " + e.getMessage());
+        }
+
         Provider provider = StringToProvider(input.provider);
-        SummarizeService service = SummarizerFactory.Create(provider);
-        SummarizerResponse summary = service.summarize(input.inputFile);
-        return new SummariseOutput().summary(summary.summary);
+        FileType fileType = StringToFileType(input.inputType);
+        SummarizeService service = CreateSummrizeService(provider, fileType, input.inputFile);
+
+        byte[] file = storage.read(input.getInputBucket() + input.getInputFile());
+
+        // Load the PDF document
+        PDDocument document = PDDocument.load(new ByteArrayInputStream(file));
+
+        // Create a PDFTextStripper
+        PDFTextStripper pdfStripper = new PDFTextStripper();
+
+        // Extract the text from the PDF
+        String text = pdfStripper.getText(document);
+
+        // Close the document
+        document.close();
+
+        
+        SummarizerResponse summary = service.summarize(text);
+        
+        String baseName = FilenameUtils.getBaseName(input.getInputFile());
+        String outputFile = input.getOutputBucket() + "summary/" + baseName + ".txt";
+
+        storage.write(summary.summary.getBytes(), outputFile);
+        return SummariseOutput.builder().outputfile(outputFile).build();
+    }
+
+
+    private SummarizeService CreateSummrizeService(Provider provider, FileType fileType, String inputUrl) {
+        if (provider != null) {
+            return SummarizerFactory.Create(provider);
+        } else if (fileType != null) {
+            return SummarizerFactory.Create(fileType);
+        } else if (inputUrl != null) {
+            return SummarizerFactory.Create(inputUrl);
+        } else {
+            return null;
+        }
     }
 
     private Provider StringToProvider(String provider) {
@@ -72,6 +126,16 @@ public class summarise implements RequestHandler<APIGatewayProxyRequestEvent, AP
             case "GCP":
             default:
                 return Provider.GCP;
+        }
+    }
+
+    private FileType StringToFileType(String fileType) {
+        switch (fileType) {
+            case "AWS":
+                return FileType.PLAIN;
+            case "GCP":
+            default:
+                return FileType.PDF;
         }
     }
 }
