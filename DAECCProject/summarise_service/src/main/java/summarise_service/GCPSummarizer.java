@@ -13,6 +13,11 @@ import com.google.protobuf.ByteString;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+// CORE library
+// import shared.Credentials;
+// import storage.Storage;
+// import storage.StorageImpl;
+
 public class GCPSummarizer implements SummarizeService {
 
     public SummarizerResponse summarize(String filename) {
