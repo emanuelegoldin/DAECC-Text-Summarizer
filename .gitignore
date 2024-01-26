@@ -3,8 +3,11 @@
 **/terraform.tfstate.backup
 **/.terraform*
 **/*.zip
+
+### Ignore credentials
 /deployment/aws_deployment/modules/aws_credentials
 /deployment/gcp_deployment/gcp_key.json
+credentials.json
 
 target/
 !.mvn/wrapper/maven-wrapper.jar

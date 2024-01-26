@@ -8,6 +8,11 @@ import com.amazonaws.services.sagemakerruntime.AmazonSageMakerRuntimeClientBuild
 import com.amazonaws.services.sagemakerruntime.model.InvokeEndpointRequest;
 import com.amazonaws.services.sagemakerruntime.model.InvokeEndpointResult;
 
+// CORE library
+import shared.Credentials;
+import storage.Storage;
+import storage.StorageImpl;
+
 public class AWSSummarizer implements SummarizeService {
     private AmazonSageMakerRuntime sagemakerRuntime;
 
