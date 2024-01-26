@@ -38,7 +38,7 @@ resource "google_cloudfunctions2_function" "default" {
   description = "gcp_function"
 
   build_config {
-    runtime     = "java11"
+    runtime     = "java17"
     entry_point = "function.summarise"
     source {
       storage_source {
@@ -54,6 +54,7 @@ resource "google_cloudfunctions2_function" "default" {
     timeout_seconds    = 60
     environment_variables = {
       PROCESSOR_NAME = var.processor_name
+      ENDPOINT_NAME = "summarizer-endpoint"
     }
   }
 }
