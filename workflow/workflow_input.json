@@ -1,0 +1,15 @@
+{
+  "inputFile": "sample.pdf",
+
+  "inputBucket": "",
+  "splitBucket": "",
+  "extractBucket": "",
+
+  "summariseBucket1": "",
+  "summariseBucket2": "",
+  
+  "outputBucket": "",
+  
+  "summariseProvider1": "AWS",
+  "summariseProvider2": "GCP"
+}
