@@ -15,8 +15,8 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -32,19 +32,18 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <!-- AWS -->
-        <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-sagemaker -->
+        <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/sagemaker -->
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-sagemaker</artifactId>
-            <version>1.12.637</version>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sagemaker</artifactId>
+            <version>2.23.10</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-sagemakerruntime -->
+        <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/sagemakerruntime -->
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-sagemakerruntime</artifactId>
-            <version>1.12.638</version>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sagemakerruntime</artifactId>
+            <version>2.23.10</version>
         </dependency>
-
         <!-- GCP -->
         <dependency>
             <groupId>com.google.cloud</groupId>
@@ -56,15 +55,6 @@
             <artifactId>google-cloud-storage</artifactId>
             <version>2.31.0</version>
         </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok-maven-plugin -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok-maven-plugin</artifactId>
-            <version>1.18.20.0</version>
-            <scope>provided</scope>
-        </dependency>
-
 
         <!-- JUnit -->
         <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine -->
