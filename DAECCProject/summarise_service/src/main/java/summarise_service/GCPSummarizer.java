@@ -1,5 +1,8 @@
 package summarise_service;
 import com.google.cloud.documentai.v1beta3.DocumentProcessorServiceSettings;
+import com.google.api.gax.core.CredentialsProvider;
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.documentai.v1beta3.Document;
 import com.google.cloud.documentai.v1beta3.DocumentProcessorServiceClient;
 import com.google.cloud.documentai.v1beta3.ProcessRequest;
@@ -9,6 +12,8 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.StorageOptions;
 import com.google.protobuf.ByteString;
+
+import shared.Credentials;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,16 +31,28 @@ public class GCPSummarizer implements SummarizeService {
 
     public SummarizerResponse processDocument(String filePath) {
         String endpoint = String.format("%s-documentai.googleapis.com:443", "us");
+        Credentials credentials;
+        try {
+            credentials = Credentials.loadDefaultCredentials();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load credentials: " + e.getMessage());
+        }
         DocumentProcessorServiceSettings settings;
         try{
-            settings =
-            DocumentProcessorServiceSettings.newBuilder().setEndpoint(endpoint).build();
+            GoogleCredentials googleCredentials = credentials.getGcpCredentials();
+            CredentialsProvider credentialsProvider = FixedCredentialsProvider.create(googleCredentials);
+
+            settings = DocumentProcessorServiceSettings.newBuilder()
+                .setEndpoint(endpoint)
+                .setCredentialsProvider(credentialsProvider)
+                .build();
         } catch (Exception e) {
             // TODO: handle exception
             return null;
         }
 
         try (DocumentProcessorServiceClient client = DocumentProcessorServiceClient.create(settings)) {
+            
             String processorName = System.getenv("PROCESSOR_NAME");
 
             ByteString content = fetchFileFromStorage(filePath);
