@@ -58,3 +58,7 @@ resource "random_id" "documents_bucket" {
 resource "random_id" "processed_documents_bucket" {
   byte_length = 8
 }
+
+output "processor_name" {
+  value = google_document_ai_processor.summarizer_processor.id
+}

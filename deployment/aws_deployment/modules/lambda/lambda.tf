@@ -2,6 +2,7 @@
 variable "id" {}
 variable "region" {}
 variable "endpoint_name" {}
+variable "processor_name" {}
 
 data "aws_iam_role" "existing" {
   name = "LabRole"
@@ -50,6 +51,7 @@ resource "aws_lambda_function" "summarise_function" {
   environment {
     variables = {
       ENDPOINT_NAME = var.endpoint_name
+      PROCESSOR_NAME = var.processor_name
     }
   }
 }
