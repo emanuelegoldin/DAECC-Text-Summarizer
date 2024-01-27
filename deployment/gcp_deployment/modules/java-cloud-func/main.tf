@@ -50,8 +50,8 @@ resource "google_cloudfunctions2_function" "default" {
 
   service_config {
     max_instance_count = 1
-    available_memory   = "256M"
-    timeout_seconds    = 60
+    available_memory   = "512M"
+    timeout_seconds    = 120
     environment_variables = {
       PROCESSOR_NAME = var.processor_name
       ENDPOINT_NAME = "summarizer-endpoint"
