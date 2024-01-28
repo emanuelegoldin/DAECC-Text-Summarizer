@@ -9,6 +9,7 @@
 /deployment/aws_deployment/modules/aws_credentials
 /deployment/gcp_deployment/gcp_key.json
 credentials.json
+DAECCProject/**/key.json
 
 target/
 !.mvn/wrapper/maven-wrapper.jar
