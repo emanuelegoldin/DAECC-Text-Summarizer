@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
+import org.json.JSONObject;
+
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.sagemakerruntime.SageMakerRuntimeClient;
 import software.amazon.awssdk.services.sagemakerruntime.model.InvokeEndpointRequest;
@@ -13,8 +15,6 @@ import software.amazon.awssdk.regions.Region;
 
 // CORE library
 import shared.Credentials;
-import storage.Storage;
-import storage.StorageImpl;
 
 public class AWSSummarizer implements SummarizeService {
 
@@ -46,8 +46,9 @@ public class AWSSummarizer implements SummarizeService {
             .body(SdkBytes.fromByteBuffer(ByteBuffer.wrap(inputFile.getBytes())))
             .build();
 
+        long startTime = System.currentTimeMillis();
         InvokeEndpointResponse result = sageMakerRuntimeClient.invokeEndpoint(invokeEndpointRequest);
-
+        long endTime = System.currentTimeMillis();
         // Process the result
         ByteBuffer response = result.body().asByteBuffer();
         // Convert ByteBuffer to String
@@ -59,10 +60,13 @@ public class AWSSummarizer implements SummarizeService {
             response.get(responseBytes);
         }
         String responseString = new String(responseBytes, Charset.forName("UTF-8"));
+        JSONObject jsonResponse = new JSONObject(responseString);
+        String summaryText = jsonResponse.getString("summary_text");
 
-        // TODO: store result in a file in a bucket
-        SummarizerResponse summarizerResponse = new SummarizerResponse();
-        summarizerResponse.summary = responseString;
-        return summarizerResponse;
+        return SummarizerResponse.builder()
+            .summary(summaryText)
+            .executionTime(endTime - startTime)
+            .provider("AWS")
+            .build();
     }
 }
