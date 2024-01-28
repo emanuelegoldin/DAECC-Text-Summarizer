@@ -7,6 +7,7 @@ GCP_DEPLOYMENT_CREDENTIALS="$GCP_DEPLOYMENT_ROOT/gcp_key.json"
 AWS_DEPLOYMENT_ROOT="$DEPLOYMENT_ROOT/aws_deployment"
 AWS_DEPLOYMENT_CREDENTIALS="$AWS_DEPLOYMENT_ROOT/modules/aws_credentials"
 WORKFLOW_ROOT="$PWD/workflow"
+WORKFLOW_CREDENTIALS="$WORKFLOW_ROOT/credentials.properties"
 
 #################
 #   Functions   #
@@ -19,6 +20,8 @@ placeCredentials (){
 
     # GCP credentials
     GCP_CREDENTIALS=$(jq -r '.gcp_credentials' credentials.json)
+    # Escape newlines and special characters
+    GCP_CREDENTIALS_ESCAPED=$(echo "$GCP_CREDENTIALS" | sed 's/\\/\\\\/g' | sed ':a;N;$!ba;s/\n/\\n/g')
 
     for dir in $(find . -name 'resources'); do
         echo "{
@@ -37,6 +40,12 @@ placeCredentials (){
 aws_access_key_id = $AWS_ACCESS_KEY
 aws_secret_access_key = $AWS_SECRET_KEY
 aws_session_token = $AWS_TOKEN" > $AWS_DEPLOYMENT_CREDENTIALS
+
+    # Place credentials in workflow folder
+    echo "aws_access_key_id = $AWS_ACCESS_KEY
+aws_secret_access_key = $AWS_SECRET_KEY
+aws_session_token = $AWS_TOKEN
+gcp_credentials=$GCP_CREDENTIALS_ESCAPED" > $WORKFLOW_CREDENTIALS
 }
 
 build (){
@@ -80,6 +89,12 @@ destroy() {
     # Destroy AWS deployment
     cd $AWS_DEPLOYMENT_ROOT
     terraform destroy -auto-approve -var="processor_name=$PROCESSOR_NAME"
+}
+
+execute() {
+    # Execute the workflow
+    cd $WORKFLOW_ROOT
+    java -jar ee.jar workflow.yaml workflow_input.json
 }
 
 while (( "$#" )); do
