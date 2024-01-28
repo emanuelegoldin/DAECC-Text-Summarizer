@@ -27,9 +27,11 @@ import storage.StorageImpl;
 
 public class summarise implements RequestHandler<SummariseInput, SummariseOutput>, HttpFunction {
     private static final Gson gson = new Gson();
+    private static String CALLED_BY_PROVIDER;
 
     @Override
     public SummariseOutput handleRequest(SummariseInput event, Context context) {
+        CALLED_BY_PROVIDER = "AWS";
         try {
             return exec(event);
         } catch (Exception e) {
@@ -39,6 +41,7 @@ public class summarise implements RequestHandler<SummariseInput, SummariseOutput
 
     @Override
     public void service(HttpRequest request, HttpResponse response) throws Exception {
+        CALLED_BY_PROVIDER = "GCP";
         // Parse request body into SummariseInput object
         JsonObject body = gson.fromJson(request.getReader(), JsonObject.class);
         SummariseInput input = gson.fromJson(body.toString(), SummariseInput.class);
@@ -63,7 +66,7 @@ public class summarise implements RequestHandler<SummariseInput, SummariseOutput
     }
 
     private SummariseOutput exec(SummariseInput input) throws Exception {
-
+        long startTime = System.currentTimeMillis();
         Credentials credentials;
         try {
             credentials = Credentials.loadDefaultCredentials();
@@ -102,8 +105,16 @@ public class summarise implements RequestHandler<SummariseInput, SummariseOutput
         String baseName = FilenameUtils.getBaseName(input.getInputFile());
         String outputFile = input.getOutputBucket() + "summary/" + baseName + ".txt";
 
-        storage.write(summary.summary.getBytes(), outputFile);
-        return SummariseOutput.builder().outputfile(outputFile).build();
+        storage.write(summary.getSummary().getBytes(), outputFile);
+        long endTime = System.currentTimeMillis();
+        return SummariseOutput.builder()
+            .outputfile(outputFile)
+            .timeToSummarise(summary.getExecutionTime())
+            .totalExecutionTime(endTime - startTime)
+            .ratio((double) summary.getExecutionTime() / (endTime - startTime))
+            .calledByProvider(CALLED_BY_PROVIDER)
+            .executedOnProvider(summary.getProvider())
+            .build();
     }
 
 

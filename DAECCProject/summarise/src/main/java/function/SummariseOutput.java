@@ -15,4 +15,9 @@ import lombok.Builder;
 @Builder
 public class SummariseOutput {
     private String outputfile;
+    private long timeToSummarise;
+    private long totalExecutionTime;
+    private double ratio;
+    private String executedOnProvider;
+    private String calledByProvider;
 }
