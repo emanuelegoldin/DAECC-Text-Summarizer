@@ -46,4 +46,4 @@ workflowBody:
         type: "string"
     properties:
       - name: "resource"
-        value: ""
+        value: "https://java-summarizer-sto6cpt45q-uc.a.run.app"
