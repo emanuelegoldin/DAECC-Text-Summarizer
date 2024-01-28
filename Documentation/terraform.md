@@ -44,11 +44,9 @@ Place the file in the `deployment/Terraform` folder.
 #### Enable APIs and services
 
 - DocumentAI
-- Cloud Resource Manager API
-- Eventarc API
+- Cloud Run
 
 #### Set roles
 
-- cloud run invoker
-- pub/sub publisher
+- cloud run admin (invoker is then included)
 - service account user
