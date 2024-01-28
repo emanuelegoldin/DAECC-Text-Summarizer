@@ -10,6 +10,7 @@
 /deployment/gcp_deployment/gcp_key.json
 credentials.json
 DAECCProject/**/key.json
+workflow/credentials.properties
 
 target/
 !.mvn/wrapper/maven-wrapper.jar
