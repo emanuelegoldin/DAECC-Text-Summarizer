@@ -1,7 +1,7 @@
 {
   "inputFile": "sample.pdf",
   "provider": "GCP",
-  "outputBucket": "https://summary-workflow-output.s3.amazonaws.com/",
-  "inputBucket": "https://summary-workflow-input.s3.amazonaws.com/",  
-  "inputtype": "PDF"
+  "outputBucket": "https://storage.cloud.google.com/dc6b8955229dbe74-documents-bucket/",
+  "inputBucket": "https://storage.cloud.google.com/dc6b8955229dbe74-documents-bucket/",  
+  "inputType": "PDF"
 }
