@@ -1,5 +1,5 @@
 package summarise_service;
-import java.io.InputStream;
+
 import java.util.Collections;
 
 import com.google.auth.oauth2.GoogleCredentials;
@@ -10,12 +10,7 @@ import com.google.cloud.documentai.v1.ProcessRequest;
 import com.google.cloud.documentai.v1.ProcessResponse;
 import com.google.protobuf.ByteString;
 
-
-
-// CORE library
-// import shared.Credentials;
-// import storage.Storage;
-// import storage.StorageImpl;
+import shared.Credentials;
 
 public class GCPSummarizer implements SummarizeService {
 
@@ -27,20 +22,21 @@ public class GCPSummarizer implements SummarizeService {
         String endpoint = String.format("%s-documentai.googleapis.com:443", "us");
         GoogleCredentials credentials;
         try {
-            InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("key.json");
-            credentials = GoogleCredentials.fromStream(in).createScoped(Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"));;
+            credentials = Credentials.loadDefaultCredentials()
+                .getGcpCredentials()
+                .createScoped(Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"));
         } catch (Exception e) {
             throw new RuntimeException("Failed to load credentials: " + e.getMessage());
         }
+
         DocumentProcessorServiceSettings settings;
-        
         try{
             settings = DocumentProcessorServiceSettings.newBuilder()
                 .setEndpoint(endpoint)
                 .setCredentialsProvider(() -> credentials)
                 .build();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to load credentials: " + e.getMessage());
+            throw new RuntimeException("Failed to create DocumentProcessorServiceSettings: " + e.getMessage());
         }
 
         try (DocumentProcessorServiceClient client = DocumentProcessorServiceClient.create(settings)) {
