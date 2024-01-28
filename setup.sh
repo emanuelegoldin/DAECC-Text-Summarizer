@@ -68,6 +68,7 @@ deploy() {
     cd $AWS_DEPLOYMENT_ROOT
     terraform init
     terraform apply -auto-approve -var="processor_name=$PROCESSOR_NAME"
+    exit 0
 }
 
 destroy() {
@@ -117,4 +118,5 @@ while (( "$#" )); do
       exit 1
       ;;
   esac
+  shift
 done
