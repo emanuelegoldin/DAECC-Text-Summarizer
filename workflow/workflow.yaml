@@ -5,282 +5,45 @@ dataIns:
   type: "string"
   source: "inputFile"
 
-- name: "sourceLanguage"
+- name: "provider"
   type: "string"
-  source: "sourceLanguage"
-
-- name: "inputBucket"
-  type: "string"
-  source: "inputBucket"
-
-- name: "splitBucket"
-  type: "string"
-  source: "splitBucket"
+  source: "provider"
 
 - name: "outputBucket"
   type: "string"
   source: "outputBucket"
 
-- name: "summariseBucket1"
+- name: "inputBucket"
   type: "string"
-  source: "summariseBucket1"
+  source: "inputBucket"
 
-- name: "summariseProvider1"
+- name: "inputType"
   type: "string"
-  source: "summariseProvider1"
+  source: "inputType"
 
-- name: "summariseBucket2"
-  type: "string"
-  source: "summariseBucket2"
-
-- name: "summariseProvider2"
-  type: "string"
-  source: "summariseProvider2"
-# - name: "summarizeRegion"
-#   type: "string"
-#   source: "summariseRegion"
 workflowBody:
 - function:
-    name: "split"
-    type: "splitType"
+    name: "summarise"
+    type: "summariseType"
     dataIns:
       - name: "inputFile"
         type: "string"
         source: "Summarizer/inputFile"
+      - name: "provider"
+        type: "string"
+        source: "Summarizer/provider"
+      - name: "outputBucket"
+        type: "string"
+        source: "Summarizer/outputBucket"
       - name: "inputBucket"
         type: "string"
         source: "Summarizer/inputBucket"
-      - name: "outputBucket"
+      - name: "inputType"
         type: "string"
-        source: "Summarizer/splitBucket"
+        source: "Summarizer/inputType"
     dataOuts:
-      - name: "pages"
-        type: "collection"
-      - name: "pagesCount"
-        type: "number"
+      - name: "outputfile"
+        type: "string"
     properties:
       - name: "resource"
         value: ""
-        
-- parallel:
-    name: "parallel"
-    dataIns:
-      - name: "page"
-        type: "string"
-        source: "split/pages"
-
-      - name: "sourceLanguage"
-        type: "string"
-        source: "Summarizer/sourceLanguage"
-
-      - name: "summariseBucket1"
-        type: "string"
-        source: "Summarizer/summariseBucket1"
-
-      - name: "summariseProvider1"
-        type: "string"
-        source: "Summarizer/summariseProvider1"
-
-      - name: "summariseBucket2"
-        type: "string"
-        source: "Summarizer/summariseBucket2"
-
-      - name: "summariseProvider2"
-        type: "string"
-        source: "Summarizer/summariseProvider2"
-    parallelBody:
-      - section:
-          - parallelFor:
-              name: "parallelFor1"
-              dataIns:
-                - name: "page"
-                  type: "collection"
-                  source: "parallel/page"
-                  constraints:
-                    - name: "distribution"
-                      value: "BLOCK(1)"
-                    # Maybe use two output from split
-                    - name: "element-index"
-                      value: "0:4"
-                - name: "sourceLanguage"
-                  type: "string"
-                  source: "Summarizer/sourceLanguage"
-                  constraints:
-                    - name: "distribution"
-                      value: "REPLICATE(*)"
-                - name: "summariseBucket1"
-                  type: "string"
-                  source: "Summarizer/summariseBucket1"
-                  constraints:
-                    - name: "distribution"
-                      value: "REPLICATE(*)"
-                - name: "outputBucket"
-                  type: "string"
-                  source: "Summarizer/outputBucket"
-                  constraints:
-                    - name: "distribution"
-                      value: "REPLICATE(*)"
-                - name: "summariseProvider1"
-                  type: "string"
-                  source: "Summarizer/summariseProvider1"
-                  constraints:
-                    - name: "distribution"
-                      value: "REPLICATE(*)"
-              loopCounter:
-                from: "0"
-                to: "5"
-                step: "1"
-              loopBody:
-                - function:
-                    name: "summarise1"
-                    type: "summariseType"
-                    dataIns:
-                      - name: "inputFile"
-                        type: "string"
-                        source: "parallelFor/page"
-                      - name: "summariseBucket1"
-                        type: "string"
-                        source: "parallelFor1/summariseBucket1"
-                      - name: "provider"
-                        type: "string"
-                        source: "parallelFor1/summariseProvider1"
-                      - name: "outputBucket"
-                        type: "string"
-                        source: "parallelFor/outputBucket"
-                        passing: true
-                    dataOuts:
-                      - name: "outputFile"
-                        type: "string"
-                      - name: "summariseBucket"
-                        type: "string"
-                      - name: "outputBucket"
-                        type: "string"
-                      - name: "summariseProvider"
-                        type: "string"
-                      - name: "summariseRegion"
-                        type: "string"
-                    properties:
-                      - name: "resource"
-                        value: ""
-              dataOuts:
-                - name: "summarizedpages"
-                  type: "collection"
-                  source: "summarise1/outputFile"
-                - name: "outputBucket"
-                  type: "string"
-                  source: "parallelFor1/outputBucket"
-              constraints:
-                - name: "concurrency"
-                  value: "5"
-      - section:
-          - parallelFor:
-              name: "parallelFor2"
-              dataIns:
-                - name: "page"
-                  type: "collection"
-                  source: "parallel/page"
-                  constraints:
-                    - name: "distribution"
-                      value: "BLOCK(1)"
-                    # Maybe use two output from split
-                    - name: "element-index"
-                      value: "5:9"
-                - name: "sourceLanguage"
-                  type: "string"
-                  source: "Summarizer/sourceLanguage"
-                  constraints:
-                    - name: "distribution"
-                      value: "REPLICATE(*)"
-                - name: "summariseBucket2"
-                  type: "string"
-                  source: "Summarizer/summariseBucket2"
-                  constraints:
-                    - name: "distribution"
-                      value: "REPLICATE(*)"
-                - name: "outputBucket"
-                  type: "string"
-                  source: "Summarizer/outputBucket"
-                  constraints:
-                    - name: "distribution"
-                      value: "REPLICATE(*)"
-                - name: "summariseProvider2"
-                  type: "string"
-                  source: "Summarizer/summariseProvider2"
-                  constraints:
-                    - name: "distribution"
-                      value: "REPLICATE(*)"
-              loopCounter:
-                from: "5"
-                to: "10"
-                step: "1"
-              loopBody:
-                - function:
-                    name: "summarise2"
-                    type: "summariseType"
-                    dataIns:
-                      - name: "inputFile"
-                        type: "string"
-                        source: "parallelFor2/page"
-                      - name: "summariseBucket2"
-                        type: "string"
-                        source: "parallelFor2/summariseBucket2"
-                      - name: "provider"
-                        type: "string"
-                        source: "parallelFor2/summariseProvider2"
-                      - name: "outputBucket"
-                        type: "string"
-                        source: "parallelFor/outputBucket"
-                        passing: true
-                    dataOuts:
-                      - name: "outputFile"
-                        type: "string"
-                      - name: "summariseBucket"
-                        type: "string"
-                      - name: "outputBucket"
-                        type: "string"
-                      - name: "summariseProvider"
-                        type: "string"
-                      - name: "summariseRegion"
-                        type: "string"
-                    properties:
-                      - name: "resource"
-                        value: ""
-              dataOuts:
-                - name: "summarizedpages"
-                  type: "collection"
-                  source: "summarise2/outputFile"
-                - name: "outputBucket"
-                  type: "string"
-                  source: "parallelFor2/outputBucket"
-              constraints:
-                - name: "concurrency"
-                  value: "5"
-    dataOuts:
-      - name: "summarizedPages"
-        type: "collection"
-        source: "parallelFor1/summarizedPages,parallelFor1/summarizedPages"
-        constraints:
-          - name: "aggregation"
-            value: "*"
-      - name: "outputBucket"
-        type: "string"
-        source: "parallelFor1/outputBucket"
-
-- function:
-    name: "merge"
-    type: "mergeType"
-    dataIns:
-    - name: "inputPages"
-      type: "collection"
-      source: "parallel/summarizedPages"
-    - name: "outputBucket"
-      type: "string"
-      source: "parallel/outputBucket"
-    dataOuts:
-    - name: "outputFile"
-      type: "string"
-    properties:
-    - name: "resource"
-      value: ""
-
-# Replace properties --> resource --> value with actual arn of functions
