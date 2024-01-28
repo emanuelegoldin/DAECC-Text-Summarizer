@@ -44,8 +44,13 @@ public class GCPSummarizer implements SummarizeService {
         }
 
         try (DocumentProcessorServiceClient client = DocumentProcessorServiceClient.create(settings)) {
-            
+            System.out.println("Getting processor name...");
             String processorName = System.getenv("PROCESSOR_NAME");
+            if (processorName == null) {
+                throw new RuntimeException("Missing processor name. Set environment variable PROCESSOR_NAME.");
+            }
+            // Clean up the processor name due to passing it from terraform output
+            processorName = processorName.replaceAll("[^a-zA-Z0-9-\\/]", "");
 
             Document rawDocument = Document.newBuilder()
                 .setContent(ByteString.copyFromUtf8(content))
@@ -54,16 +59,16 @@ public class GCPSummarizer implements SummarizeService {
 
             ProcessRequest request = ProcessRequest.newBuilder()
                 .setName(processorName)
-                
                 .setInlineDocument(rawDocument)
                 .build();
+
             long startTime = System.currentTimeMillis();
             ProcessResponse response = client.processDocument(request);
             long endTime = System.currentTimeMillis();
             Document document = response.getDocument();
 
             String summarizedText = document.getEntities(0).getNormalizedValue().getText();
-            
+
             return SummarizerResponse.builder()
                 .summary(summarizedText)
                 .executionTime(endTime - startTime)
