@@ -2,6 +2,6 @@
   "inputFile": "sample.pdf",
   "provider": "GCP",
   "outputBucket": "https://storage.cloud.google.com/dc6b8955229dbe74-documents-bucket/",
-  "inputBucket": "https://storage.cloud.google.com/dc6b8955229dbe74-documents-bucket/",  
+  "inputBucket": "https://storage.cloud.google.com/dc6b8955229dbe74-documents-bucket/",
   "inputType": "PDF"
 }

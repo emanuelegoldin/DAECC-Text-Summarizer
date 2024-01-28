@@ -1,25 +1,25 @@
 ---
 name: "Summarizer"
 dataIns:
-- name: "inputFile"
-  type: "string"
-  source: "inputFile"
+  - name: "inputFile"
+    type: "string"
+    source: "inputFile"
 
-- name: "provider"
-  type: "string"
-  source: "provider"
+  - name: "provider"
+    type: "string"
+    source: "provider"
 
-- name: "outputBucket"
-  type: "string"
-  source: "outputBucket"
+  - name: "outputBucket"
+    type: "string"
+    source: "outputBucket"
 
-- name: "inputBucket"
-  type: "string"
-  source: "inputBucket"
+  - name: "inputBucket"
+    type: "string"
+    source: "inputBucket"
 
-- name: "inputType"
-  type: "string"
-  source: "inputType"
+  - name: "inputType"
+    type: "string"
+    source: "inputType"
 
 workflowBody:
 - function:
@@ -44,6 +44,20 @@ workflowBody:
     dataOuts:
       - name: "outputfile"
         type: "string"
+      - name: "timeToSummarise"
+        type: "number"
+      - name: "totalExecutionTime"
+        type: "number"
+      - name: "ratio"
+        type: "number"
+      - name: "executedOnProvider"
+        type: "string"
+      - name: "calledByProvider"
+        type: "string"
     properties:
       - name: "resource"
-        value: "https://java-summarizer-sto6cpt45q-uc.a.run.app"
+        value: "https://us-central1-crafty-tractor-401010.cloudfunctions.net/java-summarizer"
+dataOuts:
+  - name: "outputfile"
+    type: "string"
+    source: "summarise/outputfile"
