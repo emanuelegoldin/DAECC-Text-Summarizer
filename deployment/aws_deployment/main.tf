@@ -6,15 +6,15 @@ provider "aws" {
   region = "us-east-1"
   shared_credentials_files = ["${path.root}/modules/aws_credentials"]
 }
-
-module "lambda_us_west_2" {
-  source = "./modules/lambda"
-  id = random_id.stack_id.hex
-  region = "us-west-2"
-  endpoint_name = module.sagemaker.endpoint_name
-  processor_name = var.processor_name
-  depends_on = [ module.sagemaker ]
-}
+### Uncomment the following to deploy Lambda on us-west-2
+# module "lambda_us_west_2" {
+#   source = "./modules/lambda"
+#   id = random_id.stack_id.hex
+#   region = "us-west-2"
+#   endpoint_name = module.sagemaker.endpoint_name
+#   processor_name = var.processor_name
+#   depends_on = [ module.sagemaker ]
+# }
 
 module "lambda_us_east_1" {
   source = "./modules/lambda"

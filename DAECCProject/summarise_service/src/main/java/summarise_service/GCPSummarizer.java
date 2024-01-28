@@ -2,17 +2,14 @@ package summarise_service;
 import java.io.InputStream;
 import java.util.Collections;
 
-import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.documentai.v1.DocumentProcessorServiceSettings;
 import com.google.cloud.documentai.v1.Document;
 import com.google.cloud.documentai.v1.DocumentProcessorServiceClient;
 import com.google.cloud.documentai.v1.ProcessRequest;
 import com.google.cloud.documentai.v1.ProcessResponse;
-import com.google.cloud.documentai.v1.RawDocument;
 import com.google.protobuf.ByteString;
 
-import shared.Credentials;
 
 
 // CORE library
@@ -47,8 +44,13 @@ public class GCPSummarizer implements SummarizeService {
         }
 
         try (DocumentProcessorServiceClient client = DocumentProcessorServiceClient.create(settings)) {
-            
+            System.out.println("Getting processor name...");
             String processorName = System.getenv("PROCESSOR_NAME");
+            if (processorName == null) {
+                throw new RuntimeException("Missing processor name. Set environment variable PROCESSOR_NAME.");
+            }
+            // Clean up the processor name due to passing it from terraform output
+            processorName = processorName.replaceAll("[^a-zA-Z0-9-\\/]", "");
 
             Document rawDocument = Document.newBuilder()
                 .setContent(ByteString.copyFromUtf8(content))
@@ -57,18 +59,21 @@ public class GCPSummarizer implements SummarizeService {
 
             ProcessRequest request = ProcessRequest.newBuilder()
                 .setName(processorName)
-                
                 .setInlineDocument(rawDocument)
                 .build();
 
+            long startTime = System.currentTimeMillis();
             ProcessResponse response = client.processDocument(request);
+            long endTime = System.currentTimeMillis();
             Document document = response.getDocument();
 
             String summarizedText = document.getEntities(0).getNormalizedValue().getText();
-            System.out.println("summarized text: " + summarizedText);
-            SummarizerResponse summarizerResponse = new SummarizerResponse();
-            summarizerResponse.summary = summarizedText;  
-            return summarizerResponse;
+
+            return SummarizerResponse.builder()
+                .summary(summarizedText)
+                .executionTime(endTime - startTime)
+                .provider("GCP")
+                .build();
         } catch (Exception e) {
             throw new RuntimeException("Failed to process document: " + e.getMessage());
         }
