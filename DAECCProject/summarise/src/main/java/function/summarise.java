@@ -75,17 +75,16 @@ public class summarise implements RequestHandler<SummariseInput, SummariseOutput
         }
 
         Storage storage = new StorageImpl(credentials);
+        byte[] file;
         try {
-            storage.read(input.getInputBucket() + input.getInputFile());
+            file = storage.read(input.getInputFile());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to read file "+ input.getInputFile() +" from bucket "+ input.getInputBucket() +": " + e.getMessage());
+            throw new RuntimeException("Failed to read file "+ input.getInputFile()+ ": " + e.getMessage());
         }
 
         Provider provider = StringToProvider(input.provider);
         FileType fileType = StringToFileType(input.inputType);
         SummarizeService service = CreateSummrizeService(provider, fileType, input.inputFile);
-
-        byte[] file = storage.read(input.getInputBucket() + input.getInputFile());
 
         // Load the PDF document
         PDDocument document = PDDocument.load(new ByteArrayInputStream(file));
@@ -103,7 +102,8 @@ public class summarise implements RequestHandler<SummariseInput, SummariseOutput
         SummarizerResponse summary = service.summarize(text);
         
         String baseName = FilenameUtils.getBaseName(input.getInputFile());
-        String outputFile = input.getOutputBucket() + "summary/" + baseName + ".txt";
+        String outputFileName = "summary/" + baseName + ".txt";
+        String outputFile = input.getOutputBucket() + outputFileName;
 
         storage.write(summary.getSummary().getBytes(), outputFile);
         long endTime = System.currentTimeMillis();

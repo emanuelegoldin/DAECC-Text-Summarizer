@@ -11,6 +11,5 @@ public class SummariseInput {
     String provider;
     String inputType;
     String inputFile;
-    String inputBucket;
     String outputBucket;
 }

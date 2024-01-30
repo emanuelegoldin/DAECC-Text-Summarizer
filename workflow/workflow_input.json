@@ -1,7 +1,13 @@
 {
   "inputFile": "sample.pdf",
-  "provider": "GCP",
-  "outputBucket": "https://storage.cloud.google.com/dc6b8955229dbe74-documents-bucket/",
-  "inputBucket": "https://storage.cloud.google.com/dc6b8955229dbe74-documents-bucket/",
-  "inputType": "PDF"
+  "outputBucket": "https://output-summary.s3.amazonaws.com/",
+  "inputBucket": "https://summary-workflow-input.s3.amazonaws.com/",
+  "inputType": "PDF",
+
+  "splitOutputBucket": "https://output-summary.s3.amazonaws.com/",
+  
+  "provider1": "GCP",
+  "provider2": "GCP",
+  "summariseOutputBucket1": "https://output-summary.s3.amazonaws.com/",
+  "summariseOutputBucket2": "https://output-summary.s3.amazonaws.com/"
 }
