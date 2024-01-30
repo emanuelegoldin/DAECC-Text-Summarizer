@@ -100,7 +100,7 @@ workflowBody:
                     - name: "distribution"
                       value: "BLOCK(1)"
                     - name: "element-index"
-                      value: "0:1"
+                      value: "0:4"
                 - name: "summariseBucket"
                   type: "string"
                   source: "parallel/summariseOutputBucket1"
@@ -127,7 +127,7 @@ workflowBody:
                       value: "REPLICATE(*)"
               loopCounter:
                 from: "0"
-                to: "2"
+                to: "5"
                 step: "1"
               loopBody:
                 - function:
@@ -186,7 +186,7 @@ workflowBody:
                     - name: "distribution"
                       value: "BLOCK(1)"
                     - name: "element-index"
-                      value: "1:1"
+                      value: "5:9"
                 - name: "summariseBucket"
                   type: "string"
                   source: "parallel/summariseOutputBucket2"
@@ -212,8 +212,8 @@ workflowBody:
                     - name: "distribution"
                       value: "REPLICATE(*)"
               loopCounter:
-                from: "1"
-                to: "2"
+                from: "5"
+                to: "10"
                 step: "1"
               loopBody:
                 - function:
@@ -247,6 +247,7 @@ workflowBody:
                       - name: "executedOnProvider"
                         type: "string"
                       - name: "calledByProvider"
+                        type: "string"
                     properties:
                       - name: "resource"
                         value: "arn:aws:lambda:us-east-1:072581526228:function:summarise_us-east-1"
@@ -259,7 +260,7 @@ workflowBody:
                   source: "parallelFor2/outputBucket"
               constraints:
                 - name: "concurrency"
-                  value: "1"
+                  value: "5"
     dataOuts:
       - name: "summaries"
         type: "collection"
