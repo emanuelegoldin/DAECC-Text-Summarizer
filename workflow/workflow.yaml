@@ -1,63 +1,289 @@
 ---
 name: "Summarizer"
 dataIns:
+  - name: "inputBucket"
+    type: "string"
+    source: "inputBucket"
+
   - name: "inputFile"
     type: "string"
     source: "inputFile"
 
-  - name: "provider"
+  - name: "provider1"
     type: "string"
-    source: "provider"
+    source: "provider1"
+
+  - name: "provider2"
+    type: "string"
+    source: "provider2"
+
+  - name: "summariseOutputBucket1"
+    type: "string"
+    source: "summariseOutputBucket1"
+
+  - name: "summariseOutputBucket2"
+    type: "string"
+    source: "summariseOutputBucket2"
 
   - name: "outputBucket"
     type: "string"
     source: "outputBucket"
 
-  - name: "inputBucket"
-    type: "string"
-    source: "inputBucket"
-
   - name: "inputType"
     type: "string"
     source: "inputType"
 
+  - name: "splitOutputBucket"
+    type: "string"
+    source: "splitOutputBucket"
+
 workflowBody:
+
 - function:
-    name: "summarise"
-    type: "summariseType"
+    name: "split"
+    type: "splitType"
     dataIns:
       - name: "inputFile"
         type: "string"
         source: "Summarizer/inputFile"
-      - name: "provider"
-        type: "string"
-        source: "Summarizer/provider"
-      - name: "outputBucket"
-        type: "string"
-        source: "Summarizer/outputBucket"
       - name: "inputBucket"
         type: "string"
         source: "Summarizer/inputBucket"
+      - name: "outputBucket"
+        type: "string"
+        source: "Summarizer/splitOutputBucket"
+    dataOuts:
+      - name: "files"
+        type: "collection"
+      - name: "filesCount"
+        type: "number"
+    properties:
+      - name: "resource"
+        value: "arn:aws:lambda:us-east-1:072581526228:function:split_us-east-1"
+
+- parallel:
+    name: "parallel"
+    dataIns:
+      - name: "file"
+        type: "string"
+        source: "split/files"
+      - name: "fileCount"
+        type: "number"
+        source: "split/filesCount"
+      - name: "provider1"
+        type: "string"
+        source: "Summarizer/provider1"
+      - name: "provider2"
+        type: "string"
+        source: "Summarizer/provider2"
       - name: "inputType"
         type: "string"
         source: "Summarizer/inputType"
+      - name: "summariseOutputBucket1"
+        type: "string"
+        source: "Summarizer/summariseOutputBucket1"
+      - name: "summariseOutputBucket2"
+        type: "string"
+        source: "Summarizer/summariseOutputBucket2"
+      - name: "outputBucket"
+        type: "string"
+        source: "Summarizer/outputBucket"
+    parallelBody:
+      - section:
+          - parallelFor:
+              name: "parallelFor1"
+              dataIns:
+                - name: "file"
+                  type: "string"
+                  source: "parallel/file"
+                  constraints:
+                    - name: "distribution"
+                      value: "BLOCK(1)"
+                    - name: "element-index"
+                      value: "0:1"
+                - name: "summariseBucket"
+                  type: "string"
+                  source: "parallel/summariseOutputBucket1"
+                  constraints:
+                    - name: "distribution"
+                      value: "REPLICATE(*)"
+                - name: "provider"
+                  type: "string"
+                  source: "parallel/provider1"
+                  constraints:
+                    - name: "distribution"
+                      value: "REPLICATE(*)"
+                - name: "inputType"
+                  type: "string"
+                  source: "parallel/inputType"
+                  constraints:
+                    - name: "distribution"
+                      value: "REPLICATE(*)"
+                - name: "outputBucket"
+                  type: "string"
+                  source: "parallel/outputBucket"
+                  constraints:
+                    - name: "distribution"
+                      value: "REPLICATE(*)"
+              loopCounter:
+                from: "0"
+                to: "2"
+                step: "1"
+              loopBody:
+                - function:
+                    name: "summarise1"
+                    type: "summariseType"
+                    dataIns:
+                      - name: "inputFile"
+                        type: "string"
+                        source: "parallelFor1/file"
+                      - name: "provider"
+                        type: "string"
+                        source: "parallelFor1/provider"
+                      - name: "outputBucket"
+                        type: "string"
+                        source: "parallelFor1/outputBucket"
+                      - name: "inputBucket"
+                        type: "string"
+                        source: "parallelFor1/summariseBucket"
+                      - name: "inputType"
+                        type: "string"
+                        source: "parallelFor1/inputType"
+                    dataOuts:
+                      - name: "outputfile"
+                        type: "string"
+                      - name: "timeToSummarise"
+                        type: "number"
+                      - name: "totalExecutionTime"
+                        type: "number"
+                      - name: "ratio"
+                        type: "number"
+                      - name: "executedOnProvider"
+                        type: "string"
+                      - name: "calledByProvider"
+                        type: "string"
+                    properties:
+                      - name: "resource"
+                        value: "https://us-central1-crafty-tractor-401010.cloudfunctions.net/java-summarizer"                    
+              dataOuts:
+                - name: "summaries"
+                  type: "collection"
+                  source: "summarise1/outputfile"
+                - name: "outputBucket"
+                  type: "string"
+                  source: "parallelFor1/outputBucket"
+              constraints:
+                - name: "concurrency"
+                  value: "1"
+      - section:
+          - parallelFor:
+              name: "parallelFor2"
+              dataIns:
+                - name: "file"
+                  type: "string"
+                  source: "parallel/file"
+                  constraints:
+                    - name: "distribution"
+                      value: "BLOCK(1)"
+                    - name: "element-index"
+                      value: "1:1"
+                - name: "summariseBucket"
+                  type: "string"
+                  source: "parallel/summariseOutputBucket2"
+                  constraints:
+                    - name: "distribution"
+                      value: "REPLICATE(*)"
+                - name: "provider"
+                  type: "string"
+                  source: "parallel/provider2"
+                  constraints:
+                    - name: "distribution"
+                      value: "REPLICATE(*)"
+                - name: "inputType"
+                  type: "string"
+                  source: "parallel/inputType"
+                  constraints:
+                    - name: "distribution"
+                      value: "REPLICATE(*)"
+                - name: "outputBucket"
+                  type: "string"
+                  source: "parallel/outputBucket"
+                  constraints:
+                    - name: "distribution"
+                      value: "REPLICATE(*)"
+              loopCounter:
+                from: "1"
+                to: "2"
+                step: "1"
+              loopBody:
+                - function:
+                    name: "summarise2"
+                    type: "summariseType"
+                    dataIns:
+                      - name: "inputFile"
+                        type: "string"
+                        source: "parallelFor2/file"
+                      - name: "provider"
+                        type: "string"
+                        source: "parallelFor2/provider"
+                      - name: "outputBucket"
+                        type: "string"
+                        source: "parallelFor2/outputBucket"
+                      - name: "inputBucket"
+                        type: "string"
+                        source: "parallelFor2/summariseBucket"
+                      - name: "inputType"
+                        type: "string"
+                        source: "parallelFor2/inputType"
+                    dataOuts:
+                      - name: "outputfile"
+                        type: "string"
+                      - name: "timeToSummarise"
+                        type: "number"
+                      - name: "totalExecutionTime"
+                        type: "number"
+                      - name: "ratio"
+                        type: "number"
+                      - name: "executedOnProvider"
+                        type: "string"
+                      - name: "calledByProvider"
+                    properties:
+                      - name: "resource"
+                        value: "arn:aws:lambda:us-east-1:072581526228:function:summarise_us-east-1"
+              dataOuts:
+                - name: "summaries"
+                  type: "collection"
+                  source: "summarise2/outputfile"
+                - name: "outputBucket"
+                  type: "string"
+                  source: "parallelFor2/outputBucket"
+              constraints:
+                - name: "concurrency"
+                  value: "1"
     dataOuts:
-      - name: "outputfile"
+      - name: "summaries"
+        type: "collection"
+        source: "parallelFor1/summaries,parallelFor2/summaries"
+        constraints:
+          - name: "aggregation"
+            value: "*"
+      - name: "outputBucket"
         type: "string"
-      - name: "timeToSummarise"
-        type: "number"
-      - name: "totalExecutionTime"
-        type: "number"
-      - name: "ratio"
-        type: "number"
-      - name: "executedOnProvider"
+        source: "parallelFor1/outputBucket"
+
+- function:
+    name: "merge"
+    type: "mergeType"
+    dataIns:
+      - name: "inputFiles"
+        type: "collection"
+        source: "parallel/summaries"
+      - name: "outputBucket"
         type: "string"
-      - name: "calledByProvider"
+        source: "parallel/outputBucket"
+    dataOuts:
+      - name: "outputFile"
         type: "string"
     properties:
       - name: "resource"
-        value: "https://us-central1-crafty-tractor-401010.cloudfunctions.net/java-summarizer"
-dataOuts:
-  - name: "outputfile"
-    type: "string"
-    source: "summarise/outputfile"
+        value: "arn:aws:lambda:us-east-1:072581526228:function:merge_us-east-1"
