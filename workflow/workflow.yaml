@@ -143,9 +143,6 @@ workflowBody:
                       - name: "outputBucket"
                         type: "string"
                         source: "parallelFor1/outputBucket"
-                      - name: "inputBucket"
-                        type: "string"
-                        source: "parallelFor1/summariseBucket"
                       - name: "inputType"
                         type: "string"
                         source: "parallelFor1/inputType"
@@ -229,9 +226,6 @@ workflowBody:
                       - name: "outputBucket"
                         type: "string"
                         source: "parallelFor2/outputBucket"
-                      - name: "inputBucket"
-                        type: "string"
-                        source: "parallelFor2/summariseBucket"
                       - name: "inputType"
                         type: "string"
                         source: "parallelFor2/inputType"
@@ -260,7 +254,7 @@ workflowBody:
                   source: "parallelFor2/outputBucket"
               constraints:
                 - name: "concurrency"
-                  value: "5"
+                  value: "1"
     dataOuts:
       - name: "summaries"
         type: "collection"
