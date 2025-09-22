@@ -1,0 +1,13 @@
+{
+  "inputFile": "sample.pdf",
+  "outputBucket": "https://summary-workflow-output.s3.amazonaws.com/",
+  "inputBucket": "https://summary-workflow-input.s3.amazonaws.com/",
+  "inputType": "PDF",
+
+  "splitOutputBucket": "https://summary-workflow-output.s3.amazonaws.com/",
+  
+  "provider1": "GCP",
+  "provider2": "GCP",
+  "summariseOutputBucket1": "https://summary-workflow-output.s3.amazonaws.com/",
+  "summariseOutputBucket2": "https://summary-workflow-output.s3.amazonaws.com/"
+}

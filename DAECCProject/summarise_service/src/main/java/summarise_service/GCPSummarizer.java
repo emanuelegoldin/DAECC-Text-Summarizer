@@ -1,70 +1,77 @@
 package summarise_service;
-import com.google.cloud.documentai.v1beta3.DocumentProcessorServiceSettings;
-import com.google.cloud.documentai.v1beta3.Document;
-import com.google.cloud.documentai.v1beta3.DocumentProcessorServiceClient;
-import com.google.cloud.documentai.v1beta3.ProcessRequest;
-import com.google.cloud.documentai.v1beta3.ProcessResponse;
-import com.google.cloud.documentai.v1beta3.RawDocument;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.StorageOptions;
+
+import java.util.Collections;
+
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.documentai.v1.DocumentProcessorServiceSettings;
+import com.google.cloud.documentai.v1.Document;
+import com.google.cloud.documentai.v1.DocumentProcessorServiceClient;
+import com.google.cloud.documentai.v1.ProcessRequest;
+import com.google.cloud.documentai.v1.ProcessResponse;
 import com.google.protobuf.ByteString;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import shared.Credentials;
 
 public class GCPSummarizer implements SummarizeService {
 
-    public SummarizerResponse summarize(String filename) {
-        return processDocument(filename);
+    public SummarizerResponse summarize(String content) {
+        return processDocument(content);
     }
 
-    public SummarizerResponse processDocument(String filePath) {
+    public SummarizerResponse processDocument(String content) {
         String endpoint = String.format("%s-documentai.googleapis.com:443", "us");
+        GoogleCredentials credentials;
+        try {
+            credentials = Credentials.loadDefaultCredentials()
+                .getGcpCredentials()
+                .createScoped(Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load credentials: " + e.getMessage());
+        }
+
         DocumentProcessorServiceSettings settings;
         try{
-            settings =
-            DocumentProcessorServiceSettings.newBuilder().setEndpoint(endpoint).build();
+            settings = DocumentProcessorServiceSettings.newBuilder()
+                .setEndpoint(endpoint)
+                .setCredentialsProvider(() -> credentials)
+                .build();
         } catch (Exception e) {
-            // TODO: handle exception
-            return null;
+            throw new RuntimeException("Failed to create DocumentProcessorServiceSettings: " + e.getMessage());
         }
 
         try (DocumentProcessorServiceClient client = DocumentProcessorServiceClient.create(settings)) {
+            System.out.println("Getting processor name...");
             String processorName = System.getenv("PROCESSOR_NAME");
+            if (processorName == null) {
+                throw new RuntimeException("Missing processor name. Set environment variable PROCESSOR_NAME.");
+            }
+            // Clean up the processor name due to passing it from terraform output
+            processorName = processorName.replaceAll("[^a-zA-Z0-9-\\/]", "");
 
-            ByteString content = fetchFileFromStorage(filePath);
-            RawDocument rawDocument = RawDocument.newBuilder()
-                .setContent(content)
-                .setMimeType("application/pdf")
+            Document rawDocument = Document.newBuilder()
+                .setContent(ByteString.copyFromUtf8(content))
+                .setMimeType("text/plain")
                 .build();
 
             ProcessRequest request = ProcessRequest.newBuilder()
                 .setName(processorName)
-                .setRawDocument(rawDocument)
+                .setInlineDocument(rawDocument)
                 .build();
 
+            long startTime = System.currentTimeMillis();
             ProcessResponse response = client.processDocument(request);
+            long endTime = System.currentTimeMillis();
             Document document = response.getDocument();
 
             String summarizedText = document.getEntities(0).getNormalizedValue().getText();
-            System.out.println("summarized text: " + summarizedText);
-            SummarizerResponse summarizerResponse = new SummarizerResponse();
-            summarizerResponse.summary = summarizedText;  
-            return summarizerResponse;
+
+            return SummarizerResponse.builder()
+                .summary(summarizedText)
+                .executionTime(endTime - startTime)
+                .provider("GCP")
+                .build();
         } catch (Exception e) {
-            // TODO: handle exception
-            return null;
+            throw new RuntimeException("Failed to process document: " + e.getMessage());
         }
     }
-
-    private  ByteString fetchFileFromStorage(String fileLocation) throws URISyntaxException {
-        URI uri = new URI(fileLocation);
-        String bucketName = uri.getHost();
-        String fileName = uri.getPath().substring(1);
-        Storage storage = StorageOptions.getDefaultInstance().getService();
-        Blob blob = storage.get(bucketName, fileName);
-        return ByteString.copyFrom(blob.getContent());
-    }
-
 }

@@ -45,7 +45,7 @@ module "java-function" {
   function_name = "java-summarizer"
   google_storage_bucket_name = google_storage_bucket.function_bucket.name
   region = "us-central1"
-  processor_name = "projects/${local.credentials.project_id}/locations/us/processors/${google_document_ai_processor.summarizer_processor.id}"
+  processor_name = google_document_ai_processor.summarizer_processor.id
 }
 
 resource "random_id" "function_bucket" {
@@ -57,4 +57,8 @@ resource "random_id" "documents_bucket" {
 
 resource "random_id" "processed_documents_bucket" {
   byte_length = 8
+}
+
+output "processor_name" {
+  value = google_document_ai_processor.summarizer_processor.id
 }

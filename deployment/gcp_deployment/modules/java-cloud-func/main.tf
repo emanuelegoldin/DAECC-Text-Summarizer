@@ -38,7 +38,7 @@ resource "google_cloudfunctions2_function" "default" {
   description = "gcp_function"
 
   build_config {
-    runtime     = "java11"
+    runtime     = "java17"
     entry_point = "function.summarise"
     source {
       storage_source {
@@ -46,15 +46,16 @@ resource "google_cloudfunctions2_function" "default" {
         object = google_storage_bucket_object.object.name
       }
     }
-    environment_variables = {
-      PROCESSOR_NAME = var.processor_name
-    }
   }
 
   service_config {
     max_instance_count = 1
-    available_memory   = "256M"
-    timeout_seconds    = 60
+    available_memory   = "512M"
+    timeout_seconds    = 120
+    environment_variables = {
+      PROCESSOR_NAME = var.processor_name
+      ENDPOINT_NAME = "summarizer-endpoint"
+    }
   }
 }
 
